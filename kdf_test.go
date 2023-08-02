@@ -56,14 +56,14 @@ func benchmarkArgon(m, t uint32, p uint8, b *testing.B) {
 	result = h
 }
 
-// N: work factor (MB)
+// N: work factor
 // R: memory cost
 // P: parallelism
 func benchmarkScrypt(n, r, p int, b *testing.B) {
 	var h []byte
 	for i := 0; i < b.N; i++ {
 		h = Scrypt(password, scrypt.Params{
-			N:       n << 10,
+			N:       n,
 			R:       r,
 			P:       p,
 			SaltLen: 16,
@@ -84,22 +84,22 @@ func BenchmarkBcrypt16(b *testing.B)      { benchmarkBcrypt(16, b) }
 // BenchmarkScryptDefault is the default configuration
 
 // Memory usage: ~128MB
-func BenchmarkScryptMin128(b *testing.B) { benchmarkScrypt(128, 8, 1, b) }
+func BenchmarkScryptMin128(b *testing.B) { benchmarkScrypt(128<<10, 8, 1, b) }
 
 // Memory usage: ~64MB
-func BenchmarkScryptMin64(b *testing.B) { benchmarkScrypt(64, 8, 2, b) }
+func BenchmarkScryptMin64(b *testing.B) { benchmarkScrypt(64<<10, 8, 2, b) }
 
 // Memory usage: ~32MB
-func BenchmarkScryptMin32(b *testing.B) { benchmarkScrypt(32, 8, 3, b) }
+func BenchmarkScryptMin32(b *testing.B) { benchmarkScrypt(32<<10, 8, 3, b) }
 
 // Memory usage: ~16MB
-func BenchmarkScryptMin16(b *testing.B) { benchmarkScrypt(16, 8, 5, b) }
+func BenchmarkScryptMin16(b *testing.B) { benchmarkScrypt(16<<10, 8, 5, b) }
 
 // Memory usage: ~8MB
-func BenchmarkScryptMin8(b *testing.B) { benchmarkScrypt(8, 8, 10, b) }
+func BenchmarkScryptMin8(b *testing.B) { benchmarkScrypt(8<<10, 8, 10, b) }
 
 // Memory usage: ~32MB
-func BenchmarkScryptDefault(b *testing.B) { benchmarkScrypt(32, 8, 1, b) }
+func BenchmarkScryptDefault(b *testing.B) { benchmarkScrypt(32<<10, 8, 1, b) }
 
 // Memory usage for Argon is set by the memory parameter (m).
 // BenchmarkArgonMin* is the minimum safe configuration
@@ -115,3 +115,16 @@ func BenchmarkArgonMem32(b *testing.B)   { benchmarkArgon(32, 2, 1, b) }
 func BenchmarkArgonMem16(b *testing.B)   { benchmarkArgon(16, 3, 1, b) }
 func BenchmarkArgonMem8(b *testing.B)    { benchmarkArgon(8, 5, 1, b) }
 func BenchmarkArgonDefault(b *testing.B) { benchmarkArgon(64, 1, 2, b) }
+
+// https://datatracker.ietf.org/doc/html/rfc9106#section-7.4
+// The Argon2id variant with t=1 and 2 GiB memory is the FIRST RECOMMENDED option and is suggested as a default setting for all environments.
+// This setting is secure against side-channel attacks and maximizes adversarial costs on dedicated brute-force hardware.
+// The Argon2id variant with t=3 and 64 MiB memory is the SECOND RECOMMENDED option and is suggested as a default setting for memory-constrained environments.
+//
+// Here we try to vary the parallelism to see how if it can be made faster for the defender.
+func BenchmarkArgonRecommendedFirst(b *testing.B)   { benchmarkArgon(2*1024, 1, 1, b) }
+func BenchmarkArgonRecommendedFirst2(b *testing.B)  { benchmarkArgon(2*1024, 1, 2, b) }
+func BenchmarkArgonRecommendedFirst8(b *testing.B)  { benchmarkArgon(2*1024, 1, 8, b) }
+func BenchmarkArgonRecommendedSecond(b *testing.B)  { benchmarkArgon(64, 3, 1, b) }
+func BenchmarkArgonRecommendedSecond2(b *testing.B) { benchmarkArgon(64, 3, 2, b) }
+func BenchmarkArgonRecommendedSecond8(b *testing.B) { benchmarkArgon(64, 3, 8, b) }
