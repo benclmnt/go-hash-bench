@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/alexedwards/argon2id"
@@ -30,4 +31,14 @@ func Scrypt(password []byte, params scrypt.Params) []byte {
 		log.Println(err)
 	}
 	return hash
+}
+
+func main() {
+	fmt.Println(string(Argon2([]byte("sdfg d"), &argon2id.Params{
+		Memory:      2 * 1024 * 1024,
+		Iterations:  1,
+		Parallelism: 8,
+		SaltLength:  16,
+		KeyLength:   32,
+	})))
 }
